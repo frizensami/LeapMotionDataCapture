@@ -17,7 +17,7 @@
                 <Button x:Name="btnRecord" Content="Record Start" HorizontalAlignment="Left" Height="34" Margin="10,13,0,0" VerticalAlignment="Top" Width="101" Click="btnRecord_Click"/>
                 <Button x:Name="btnRecordPause" Content="Record Pause" HorizontalAlignment="Left" Height="34" Margin="193,10,0,0" VerticalAlignment="Top" Width="101" Click="btnRecordPause_Click" IsEnabled="False"/>
                 <Button x:Name="btnRecordStop" Content="Record Stop" HorizontalAlignment="Left" Height="33" Margin="426,10,0,0" VerticalAlignment="Top" Width="114" Click="btnRecordStop_Click" IsEnabled="False"/>
-                <Image x:Name="imgFrame" HorizontalAlignment="Left" Height="273" Margin="193,88,0,0" VerticalAlignment="Top" Width="371"/>
+                <Image x:Name="imgFrame" HorizontalAlignment="Left" Height="273" Margin="193,138,0,0" VerticalAlignment="Top" Width="371"/>
                 <TabControl HorizontalAlignment="Left" Height="100" Margin="646,296,-233.2,-86.4" VerticalAlignment="Top" Width="100">
                     <TabItem Header="TabItem">
                         <Grid Background="#FFE5E5E5"/>
@@ -29,6 +29,10 @@
                 <Button x:Name="btnRecordResume" Content="Record Resume" HorizontalAlignment="Left" Height="34" Margin="299,10,0,0" VerticalAlignment="Top" Width="101" Click="btnRecordResume_Click" IsEnabled="False"/>
                 <TextBox x:Name="tbFileName" HorizontalAlignment="Left" Height="23" Margin="287,50,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="allframes.data"/>
                 <Label Content="Filename:" HorizontalAlignment="Left" Height="27" Margin="220,50,0,0" VerticalAlignment="Top" Width="62"/>
+                <TextBox x:Name="tbCSVName" HorizontalAlignment="Left" Height="23" Margin="444,50,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="out.csv"/>
+                <TextBox x:Name="tbCurStimCode" HorizontalAlignment="Left" Height="23" Margin="349,83,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="32"/>
+                <Label Content="Stim Code&#xD;&#xA;(cannot inject 0)" HorizontalAlignment="Left" Height="43" Margin="193,78,0,0" VerticalAlignment="Top" Width="119"/>
+                <Button x:Name="btnStimCodeInject" Content="Inject Stim" HorizontalAlignment="Left" Height="23" Margin="485,83,0,0" VerticalAlignment="Top" Width="79" Click="btnStimCodeInject_Click"/>
 
             </Grid>
         </TabItem>

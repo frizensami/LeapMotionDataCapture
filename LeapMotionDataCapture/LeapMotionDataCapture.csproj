@@ -37,6 +37,9 @@
     <Reference Include="LeapCSharp.NET4.0">
       <HintPath>..\..\LeapDeveloperKit_2.2.4+26750_win\LeapSDK\lib\LeapCSharp.NET4.0.dll</HintPath>
     </Reference>
+    <Reference Include="NamedPipeWrapper">
+      <HintPath>..\packages\NamedPipeWrapper.1.4.0\lib\net40\NamedPipeWrapper.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -89,6 +92,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

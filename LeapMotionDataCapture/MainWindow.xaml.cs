@@ -7,6 +7,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Media.Imaging;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using NamedPipeWrapper;
 
 namespace LeapMotionDataCapture
 {
@@ -26,13 +28,24 @@ namespace LeapMotionDataCapture
 
         //global writer object
         private System.IO.BinaryWriter writer;
-        
+
+        //writer object for CSV
+        private System.IO.StreamWriter csvWriter;
+
         //var to check if recording is requested
         private Boolean recordMode = false;
 
         //list to hold all deserialised frames
         List<Leap.Frame> frameList;
 
+        //var to hold stimcode, writer function will clear this once it's written to the closest available data frame
+        public static int curStimCode;
+
+        //pipe stuff
+        MyClient pipeClient;
+        private const string PIPE_NAME = "DataCapturePipe";
+        private const string LEAP_CONNECTED_MESSAGE = "-2";
+        private bool firstFrame = true;
         /// <summary>
         /// Init vars and subscribe the required listener to the leap controller
         /// </summary>
@@ -44,11 +57,15 @@ namespace LeapMotionDataCapture
             this.listener = new LeapEventListener(this);
             controller.AddListener(listener);
 
-            
+            //init pipe stuff
+            pipeClient = new MyClient(PIPE_NAME);
+            pipeClient.SendMessage("I Am Leap Motion");
             
             //init the frame list
             frameList = new List<Leap.Frame>();
 
+            //init the stimcode
+            curStimCode = 0;
         }
 
 
@@ -66,6 +83,11 @@ namespace LeapMotionDataCapture
                         this.connectHandler();
                         break;
                     case "onFrame":
+                        if (firstFrame == true)
+                        {
+                            firstFrame = false;
+                            pipeClient.SendMessage(LEAP_CONNECTED_MESSAGE);
+                        }
                         if (!this.isClosing)
                             this.newFrameHandler(this.controller.Frame());
                         break;
@@ -80,6 +102,7 @@ namespace LeapMotionDataCapture
         void connectHandler()
         {
             this.controller.SetPolicy(Controller.PolicyFlag.POLICY_IMAGES);
+            this.controller.SetPolicy(Controller.PolicyFlag.POLICY_BACKGROUND_FRAMES);
             this.controller.EnableGesture(Gesture.GestureType.TYPE_SWIPE);
             this.controller.Config.SetFloat("Gesture.Swipe.MinLength", 100.0f);
         }
@@ -96,25 +119,32 @@ namespace LeapMotionDataCapture
             if (recordMode)
             {
                 //write the recived frame to file
-                writeFrameToFile(frame);
+                writeFrameToFile(frame); //stimcode read from global
+
                 
+             
+
                 //process image data from the frame
                 Leap.Image image = frame.Images[0];
-                Bitmap bitmap = new Bitmap(image.Width, image.Height, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
-                //set palette
-                ColorPalette grayscale = bitmap.Palette;
-                for (int i = 0; i < 256; i++)
+                if (image.Width != 0 && image.Height != 0)
                 {
-                    grayscale.Entries[i] = System.Drawing.Color.FromArgb((int)255, i, i, i);
-                }
-                bitmap.Palette = grayscale;
-                Rectangle lockArea = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-                BitmapData bitmapData = bitmap.LockBits(lockArea, ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
-                byte[] rawImageData = image.Data;
-                System.Runtime.InteropServices.Marshal.Copy(rawImageData, 0, bitmapData.Scan0, image.Width * image.Height);
-                bitmap.UnlockBits(bitmapData);
+                    Bitmap bitmap = new Bitmap(image.Width, image.Height, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
+                    //set palette
+                    ColorPalette grayscale = bitmap.Palette;
+                    for (int i = 0; i < 256; i++)
+                    {
+                        grayscale.Entries[i] = System.Drawing.Color.FromArgb((int)255, i, i, i);
+                    }
+                    bitmap.Palette = grayscale;
+                    Rectangle lockArea = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+                    BitmapData bitmapData = bitmap.LockBits(lockArea, ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
+                    byte[] rawImageData = image.Data;
+                    System.Runtime.InteropServices.Marshal.Copy(rawImageData, 0, bitmapData.Scan0, image.Width * image.Height);
+                    bitmap.UnlockBits(bitmapData);
 
-                imgFrame.Source = ConvertBitmap.BitmapToBitmapSource(bitmap);
+                    imgFrame.Source = ConvertBitmap.BitmapToBitmapSource(bitmap);
+                }
+                
                 
             }
             
@@ -122,14 +152,29 @@ namespace LeapMotionDataCapture
 
         }
 
+
         void writeFrameToFile(Leap.Frame frame)
         {
-            //specific write method --> stores data in format: 4 byte integer specifying size of frame followed by frame bytes themselves
+            //specific write method --> stores data in format: 64 bit serialised datetime object then 32 bit stimcode then 32 bit integer specifying size of frame, then serialised frame bytes of length (size of frame read before this) itself
+            
+            long binaryDate = DateTime.Now.ToBinary();
+
             Leap.Frame frameToSerialize = frame;
             byte[] serialized = frameToSerialize.Serialize;
             Int32 length = serialized.Length;
+
+            
+            Console.WriteLine(frame.Timestamp.ToString());
+            writer.Write(binaryDate);
+            writer.Write(curStimCode);
             writer.Write(length);
             writer.Write(serialized);
+
+            //reset stim code to prevent multiple occurences of the stim event
+            curStimCode = 0;
+
+
+            
         }
 
         void MainWindow_Closing(object sender, EventArgs e)
@@ -145,6 +190,7 @@ namespace LeapMotionDataCapture
         {
             //create/overwrite frames file
             writer = new System.IO.BinaryWriter(System.IO.File.Open(tbFileName.Text.ToString(), System.IO.FileMode.Create));
+            csvWriter = new System.IO.StreamWriter(System.IO.File.Open(tbCSVName.Text.ToString(), System.IO.FileMode.Create));
 
             recordMode = true;
             btnRecordPause.IsEnabled = true;
@@ -200,10 +246,24 @@ namespace LeapMotionDataCapture
                 {
                     while (br.BaseStream.Position < br.BaseStream.Length)
                     {
+                        //deserialises and reads the binary file
+                        DateTime date = new DateTime();
+                        date = DateTime.FromBinary(br.ReadInt64());
+                       // Console.WriteLine(date.ToString());
+
+                        Int32 stimCode = br.ReadInt32();
+                       
+                            
+
                         Int32 nextBlock = br.ReadInt32();
                         byte[] frameData = br.ReadBytes(nextBlock);
                         Leap.Frame newFrame = new Leap.Frame();
                         newFrame.Deserialize(frameData);
+
+                        if (stimCode == 5443)
+                        {
+                            Debug.WriteLine("5443 detected: " + newFrame.Id);
+                        }
                         frameList.Add(newFrame);
                         //Console.WriteLine(newFrame.CurrentFramesPerSecond);
                         
@@ -219,6 +279,11 @@ namespace LeapMotionDataCapture
                 */
    
             }
+        }
+
+        private void btnStimCodeInject_Click(object sender, RoutedEventArgs e)
+        {
+            curStimCode = Convert.ToInt32(tbCurStimCode.Text);
         }
 
         
@@ -268,5 +333,51 @@ namespace LeapMotionDataCapture
             this.eventDelegate.LeapEventNotification("onDisconnect");
         }
 
+    }
+
+    public class MyClient
+    {
+        /// <summary>
+        /// Modified class to act as a named pipe server. Can add own function to subscribe to connection message event etc
+        /// </summary>
+        private NamedPipeClient<string> client;
+
+
+        public MyClient(string pipeName)
+        {
+            this.client = new NamedPipeClient<string>(pipeName);
+            client.ServerMessage += OnServerMessage;
+            client.Error += OnError;
+            client.Start();
+
+        }
+
+        private void OnServerMessage(NamedPipeConnection<string, string> connection, string message)
+        {
+            Debug.WriteLine("Server says: " + message);
+            int value;
+            if (int.TryParse(message, out value))
+            {
+                if (value > 0)
+                    MainWindow.curStimCode = value;
+                else
+                    throw new ArgumentOutOfRangeException("Stimcode should only be positive");
+            }
+        }
+
+        private void OnError(Exception exception)
+        {
+            Console.Error.WriteLine("ERROR: {0}", exception);
+        }
+
+        public void SendMessage(string message)
+        {
+            client.PushMessage(message);
+        }
+
+        public void Stop()
+        {
+            client.Stop();
+        }
     }
 }
