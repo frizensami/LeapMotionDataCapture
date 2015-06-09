@@ -9,6 +9,16 @@ using System.Windows.Media.Imaging;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using NamedPipeWrapper;
+/**
+ * WARNING WARNING WARNING
+ * 
+ * IF THIS DOES NOT WORK (NO IMAGE IN THE CENTER, ETC)
+ * GO TO LEAP MOTION CONTROL PANEL AND ALLOW BACKGROUND COLLECTION OF DATA AS WELL AS IMAGE COLLECTION (2 SEPARATE CHECKBOXES)
+ * 
+ * 
+ **/
+
+
 
 namespace LeapMotionDataCapture
 {
@@ -66,6 +76,8 @@ namespace LeapMotionDataCapture
 
             //init the stimcode
             curStimCode = 0;
+
+            btnStimCodeInject.Focus();
         }
 
 
@@ -86,7 +98,7 @@ namespace LeapMotionDataCapture
                         if (firstFrame == true)
                         {
                             firstFrame = false;
-                            pipeClient.SendMessage(LEAP_CONNECTED_MESSAGE);
+                            //pipeClient.SendMessage(LEAP_CONNECTED_MESSAGE);
                         }
                         if (!this.isClosing)
                             this.newFrameHandler(this.controller.Frame());
@@ -284,6 +296,12 @@ namespace LeapMotionDataCapture
         private void btnStimCodeInject_Click(object sender, RoutedEventArgs e)
         {
             curStimCode = Convert.ToInt32(tbCurStimCode.Text);
+            tbCurStimCode.Text = (Convert.ToInt32(tbCurStimCode.Text) + Convert.ToInt32(tbIncrementNum.Text)).ToString();
+        }
+
+        private void tbIncrementNum_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            
         }
 
         
@@ -335,49 +353,49 @@ namespace LeapMotionDataCapture
 
     }
 
-    public class MyClient
-    {
-        /// <summary>
-        /// Modified class to act as a named pipe server. Can add own function to subscribe to connection message event etc
-        /// </summary>
-        private NamedPipeClient<string> client;
-
-
-        public MyClient(string pipeName)
+        public class MyClient
         {
-            this.client = new NamedPipeClient<string>(pipeName);
-            client.ServerMessage += OnServerMessage;
-            client.Error += OnError;
-            client.Start();
+            /// <summary>
+            /// Modified class to act as a named pipe server. Can add own function to subscribe to connection message event etc
+            /// </summary>
+            private NamedPipeClient<string> client;
 
-        }
 
-        private void OnServerMessage(NamedPipeConnection<string, string> connection, string message)
-        {
-            Debug.WriteLine("Server says: " + message);
-            int value;
-            if (int.TryParse(message, out value))
+            public MyClient(string pipeName)
             {
-                if (value > 0)
-                    MainWindow.curStimCode = value;
-                else
-                    throw new ArgumentOutOfRangeException("Stimcode should only be positive");
+                this.client = new NamedPipeClient<string>(pipeName);
+                client.ServerMessage += OnServerMessage;
+                client.Error += OnError;
+                client.Start();
+
+            }
+
+            private void OnServerMessage(NamedPipeConnection<string, string> connection, string message)
+            {
+                Debug.WriteLine("Server says: " + message);
+                int value;
+                if (int.TryParse(message, out value))
+                {
+                    if (value > 0)
+                        MainWindow.curStimCode = value;
+                    else
+                        throw new ArgumentOutOfRangeException("Stimcode should only be positive");
+                }
+            }
+
+            private void OnError(Exception exception)
+            {
+                Console.Error.WriteLine("ERROR: {0}", exception);
+            }
+
+            public void SendMessage(string message)
+            {
+                client.PushMessage(message);
+            }
+
+            public void Stop()
+            {
+                client.Stop();
             }
         }
-
-        private void OnError(Exception exception)
-        {
-            Console.Error.WriteLine("ERROR: {0}", exception);
-        }
-
-        public void SendMessage(string message)
-        {
-            client.PushMessage(message);
-        }
-
-        public void Stop()
-        {
-            client.Stop();
-        }
-    }
 }
