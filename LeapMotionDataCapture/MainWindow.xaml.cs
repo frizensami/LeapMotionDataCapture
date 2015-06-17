@@ -200,9 +200,12 @@ namespace LeapMotionDataCapture
 
         private void btnRecord_Click(object sender, RoutedEventArgs e)
         {
+            //set the current date and time
+            var currentDateTime = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+
             //create/overwrite frames file
-            writer = new System.IO.BinaryWriter(System.IO.File.Open(tbFileName.Text.ToString(), System.IO.FileMode.Create));
-            csvWriter = new System.IO.StreamWriter(System.IO.File.Open(tbCSVName.Text.ToString(), System.IO.FileMode.Create));
+            writer = new System.IO.BinaryWriter(System.IO.File.Open(tbFileName.Text.ToString() + currentDateTime, System.IO.FileMode.Create));
+            csvWriter = new System.IO.StreamWriter(System.IO.File.Open(tbCSVName.Text.ToString() + currentDateTime, System.IO.FileMode.Create));
 
             recordMode = true;
             btnRecordPause.IsEnabled = true;
@@ -218,6 +221,7 @@ namespace LeapMotionDataCapture
             btnRecordResume.IsEnabled = false;
             btnRecordPause.IsEnabled = false;
             writer.Close();
+            csvWriter.Close();
         }
         private void btnRecordPause_Click(object sender, RoutedEventArgs e)
         {
