@@ -204,8 +204,8 @@ namespace LeapMotionDataCapture
             var currentDateTime = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
             //create/overwrite frames file
-            writer = new System.IO.BinaryWriter(System.IO.File.Open(tbFileName.Text.ToString() + currentDateTime, System.IO.FileMode.Create));
-            csvWriter = new System.IO.StreamWriter(System.IO.File.Open(tbCSVName.Text.ToString() + currentDateTime, System.IO.FileMode.Create));
+            writer = new System.IO.BinaryWriter(System.IO.File.Open(currentDateTime + tbFileName.Text.ToString(), System.IO.FileMode.Create));
+            csvWriter = new System.IO.StreamWriter(System.IO.File.Open(currentDateTime + tbCSVName.Text.ToString() + currentDateTime, System.IO.FileMode.Create));
 
             recordMode = true;
             btnRecordPause.IsEnabled = true;
