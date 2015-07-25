@@ -255,6 +255,7 @@ namespace LeapMotionDataCapture
             // Get the selected file name and display in a TextBox 
             if (result == true)
             {
+                frameList.Clear();
                 // Open document 
                 string filename = dlg.FileName;
                 using (System.IO.BinaryReader br =
@@ -306,6 +307,12 @@ namespace LeapMotionDataCapture
         private void tbIncrementNum_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             
+        }
+
+        private void btnAnalyse_Click(object sender, RoutedEventArgs e)
+        {
+            LeapMotionDataCaptureReader.MainWindow window = new LeapMotionDataCaptureReader.MainWindow();
+            window.Show();
         }
 
         

@@ -15,3 +15,5 @@ D:\ASTAR INTERNSHIP\Acceleglove-LeapMotion-Realsense Project\Leap Motion\LeapMot
 D:\ASTAR INTERNSHIP\Acceleglove-LeapMotion-Realsense Project\Leap Motion\LeapMotionDataCapture\LeapMotionDataCapture\bin\Debug\NamedPipeWrapper.dll
 D:\ASTAR INTERNSHIP\Acceleglove-LeapMotion-Realsense Project\Leap Motion\LeapMotionDataCapture\LeapMotionDataCapture\bin\Debug\NamedPipeWrapper.pdb
 D:\ASTAR INTERNSHIP\Acceleglove-LeapMotion-Realsense Project\Leap Motion\LeapMotionDataCapture\LeapMotionDataCapture\bin\Debug\NamedPipeWrapper.xml
+D:\ASTAR INTERNSHIP\Acceleglove-LeapMotion-Realsense Project\Leap Motion\LeapMotionDataCapture\LeapMotionDataCapture\bin\Debug\LeapMotionDataCaptureReader.exe
+D:\ASTAR INTERNSHIP\Acceleglove-LeapMotion-Realsense Project\Leap Motion\LeapMotionDataCapture\LeapMotionDataCapture\bin\Debug\LeapMotionDataCaptureReader.pdb
